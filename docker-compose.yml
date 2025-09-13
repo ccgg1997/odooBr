@@ -14,7 +14,7 @@ services:
     depends_on:
       - db
     ports:
-      - "9079:8069"
+      - "9079:8099"
     environment:
       HOST: db
       USER: odoo
