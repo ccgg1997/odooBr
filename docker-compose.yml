@@ -19,16 +19,12 @@ services:
     image: odoo:18.0
     depends_on:
       - db
-    environment:
-      HOST: db
-      USER: odoo
-      PASSWORD: odoo
     volumes:
       - odoo-data:/var/lib/odoo
       - ./odoo/custom-addons:/mnt/extra-addons
     command: >
-      odoo --db_host=$HOST --db_port=5432 --db_user=$USER --db_password=$PASSWORD
-           -d odoo -i base --without-demo=all --stop-after-init
+      odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo
+           -d odoo -i base --load-language=es_ES --without-demo=all --stop-after-init
     restart: "no"
 
   odoo:
@@ -36,15 +32,15 @@ services:
     depends_on:
       - db
     environment:
-      HOST: db
-      USER: odoo
-      PASSWORD: odoo
+      ODOO_PROXY_MODE: "1"
     ports:
-      - "9079:8069"        # cambia aquí si choca con otro servicio
-      # - "9072:8072"      # opcional: long-polling/bus si usas workers
+      - "9079:8069"   # si tu panel ignora 'ports:', configura 8069 como HTTP Port en el panel
     volumes:
       - odoo-data:/var/lib/odoo
       - ./odoo/custom-addons:/mnt/extra-addons
+    command: >
+      odoo --db_host=db --db_port=5432 --db_user=odoo --db_password=odoo
+           --database=odoo --http-port=8069 --proxy-mode
     restart: unless-stopped
 
 volumes:
