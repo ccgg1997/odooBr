@@ -13,7 +13,6 @@ services:
     image: odoo:18.0
     depends_on:
       - db
-    ports:
     environment:
       HOST: db
       USER: odoo
