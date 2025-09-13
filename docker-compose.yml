@@ -8,8 +8,14 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  odoo:
+  # Inicializa la BD instalando 'base' y sale
+  odoo-init:
     image: odoo:18.0
     depends_on:
       - db
@@ -19,11 +25,27 @@ services:
       PASSWORD: odoo
     volumes:
       - odoo-data:/var/lib/odoo
-      - ./extra-addons:/mnt/extra-addons
-    restart: unless-stopped
+      - ./odoo/custom-addons:/mnt/extra-addons
     command: >
-      bash -lc "python3 -m pip install --no-cache-dir --break-system-packages 'werkzeug==2.3.7'
-      && exec /entrypoint.sh odoo"
+      odoo --db_host=$HOST --db_port=5432 --db_user=$USER --db_password=$PASSWORD
+           -d odoo -i base --without-demo=all --stop-after-init
+    restart: "no"
+
+  odoo:
+    image: odoo:18.0
+    depends_on:
+      - db
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    ports:
+      - "9079:8069"        # cambia aquí si choca con otro servicio
+      # - "9072:8072"      # opcional: long-polling/bus si usas workers
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./odoo/custom-addons:/mnt/extra-addons
+    restart: unless-stopped
 
 volumes:
   db-data:
