@@ -10,8 +10,18 @@
           <t t-foreach="grouped_lines" t-as="g">
             <tr>
               <!-- 1) Producto + variantes inline -->
-              <td>
-                <span t-esc="g['product'].display_name"/>
+               <td>
+                <!-- Mostrar código del producto si existe -->
+                <t t-if="g['product'].default_code">
+                  <strong>[<span t-esc="g['product'].default_code"/>]</strong>
+                  <span class="ms-1" t-esc="g['product'].name"/>
+                </t>
+                <!-- Si no hay código, solo mostrar el nombre -->
+                <t t-else="">
+                  <span t-esc="g['product'].name"/>
+                </t>
+                
+                <!-- Variantes -->
                 <t t-if="g['variants']">
                   <br/>
                   <small class="d-block text-muted mb-0">
