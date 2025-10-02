@@ -36,7 +36,7 @@ class AccountMove(models.Model):
                     "product_name": product.product_tmpl_id.name,
                     "default_code": self.get_base_default_code(product.default_code),
                     "variants": [],
-                    "qty": 0.0,
+                    "qty": 0,
                     "unit_price": 0.0,
                     "subtotal": 0.0,
                     "uom_id": product.uom_id,
