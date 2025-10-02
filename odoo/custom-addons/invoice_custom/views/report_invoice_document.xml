@@ -13,7 +13,7 @@
                <td>
                 <!-- Mostrar código del producto si existe -->
                 <t t-if="g['product'].default_code">
-                  <strong>[<span t-esc="g['product'].default_code"/>]</strong>
+                  <strong>[<span t-esc="g['default_code']"/>]</strong>
                   <span class="ms-1" t-esc="g['product'].name"/>
                 </t>
                 <!-- Si no hay código, solo mostrar el nombre -->
@@ -31,7 +31,10 @@
               </td>
               <!-- 2) Cantidad -->
               <td class="text-end">
-                <span t-esc="g['qty']"/> <span t-esc="g['product'].uom_id.name"/>
+                <span t-esc="g['qty']"/> 
+                <t t-if="g.get('uom_id')">
+                  <span t-esc="g['uom_id'].name"/>
+                </t>
               </td>
               <!-- 3) Precio unitario -->
               <td class="text-end"
@@ -42,7 +45,12 @@
               <!-- 4) Impuestos -->
               <td class="text-end"
                   t-attf-class="{{ 'd-none d-md-table-cell' if report_type=='html' else '' }}">
-                <span class="text-nowrap" t-esc="', '.join(map(lambda t: t.name, o.env['account.move.line'].browse(0).tax_ids))"/>
+                <t t-if="g.get('tax_ids')">
+                  <span class="text-nowrap" t-esc="', '.join(map(lambda t: t.name, g['tax_ids']))"/>
+                </t>
+                <t t-else="">
+                  <span>-</span>
+                </t>
               </td>
               <!-- 5) Importe -->
               <td class="text-end">

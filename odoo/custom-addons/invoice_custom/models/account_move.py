@@ -16,7 +16,7 @@ class AccountMove(models.Model):
 
             # Obtener el nombre de la variante específica
             variant_attrs = []
-            if hasattr(product, "product_template_attribute_value_ids"):
+            if product.product_template_attribute_value_ids:
                 for attr_value in product.product_template_attribute_value_ids:
                     variant_attrs.append(attr_value.name)
 
@@ -34,26 +34,34 @@ class AccountMove(models.Model):
                 groups[key] = {
                     "product": product.product_tmpl_id,
                     "product_name": product.product_tmpl_id.name,
+                    "default_code": self.get_base_default_code(product.default_code),
                     "variants": [],
                     "qty": 0.0,
-                    "price_unit": line.price_unit,
+                    "price_unit": 0.0,  # Calcularemos el promedio ponderado
                     "subtotal": 0.0,
                     "uom_id": product.uom_id,
-                    "tax_ids": line.tax_ids,  # Guardar impuestos de la primera línea
+                    "tax_ids": line.tax_ids,
+                    "total_qty_for_avg": 0.0,  # Para calcular precio promedio
                 }
 
-            # Agregar información de esta variante
+            # Agregar información de esta variante (SIN usar int())
             if variant_name:
-                groups[key]["variants"].append(f"{int(line.quantity)} {variant_name}")
+                groups[key]["variants"].append(f"{line.quantity} {variant_name}")
             else:
-                groups[key]["variants"].append(f"{int(line.quantity)}")
+                groups[key]["variants"].append(f"{line.quantity}")
 
             groups[key]["qty"] += line.quantity
             groups[key]["subtotal"] += line.price_subtotal
+            # Calcular precio promedio ponderado
+            groups[key]["total_qty_for_avg"] += line.quantity
+            groups[key]["price_unit"] = groups[key]["subtotal"] / groups[key]["total_qty_for_avg"] if groups[key]["total_qty_for_avg"] > 0 else 0.0
 
         # Procesar grupos finales
         result = []
         for group_data in groups.values():
+            # Limpiar campo auxiliar
+            group_data.pop("total_qty_for_avg", None)
+            
             # Unir las variantes
             group_data["variants"] = ", ".join(group_data["variants"])
 
@@ -65,9 +73,17 @@ class AccountMove(models.Model):
                     "display_name": group_data["product_name"],
                     "name": group_data["product_name"],
                     "uom_id": group_data["uom_id"],
+                    "default_code": group_data["default_code"]
                 },
             )
 
             result.append(group_data)
 
         return result
+
+    @staticmethod
+    def get_base_default_code(default_code):
+        if default_code and '-' in default_code:
+            return default_code.split('-')[0]
+        return default_code or ""
+    
