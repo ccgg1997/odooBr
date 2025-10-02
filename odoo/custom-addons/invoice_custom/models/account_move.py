@@ -37,24 +37,24 @@ class AccountMove(models.Model):
                     "default_code": self.get_base_default_code(product.default_code),
                     "variants": [],
                     "qty": 0.0,
-                    "price_unit": 0.0,  # Calcularemos el promedio ponderado
+                    "unit_price": 0.0,
                     "subtotal": 0.0,
                     "uom_id": product.uom_id,
                     "tax_ids": line.tax_ids,
                     "total_qty_for_avg": 0.0,  # Para calcular precio promedio
                 }
 
-            # Agregar información de esta variante (SIN usar int())
+            # Agregar información de esta variante
             if variant_name:
-                groups[key]["variants"].append(f"{line.quantity} {variant_name}")
+                groups[key]["variants"].append(f"{int(line.quantity)} {variant_name}")
             else:
-                groups[key]["variants"].append(f"{line.quantity}")
+                groups[key]["variants"].append(f"{int(line.quantity)}")
 
             groups[key]["qty"] += line.quantity
             groups[key]["subtotal"] += line.price_subtotal
-            # Calcular precio promedio ponderado
-            groups[key]["total_qty_for_avg"] += line.quantity
-            groups[key]["price_unit"] = groups[key]["subtotal"] / groups[key]["total_qty_for_avg"] if groups[key]["total_qty_for_avg"] > 0 else 0.0
+            # Recalcular precio unitario promedio ponderado
+            if groups[key]["qty"] > 0:
+                groups[key]["unit_price"] = groups[key]["subtotal"] / groups[key]["qty"]
 
         # Procesar grupos finales
         result = []
